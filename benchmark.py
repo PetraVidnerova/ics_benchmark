@@ -1,3 +1,4 @@
+import click 
 from tqdm import tqdm
 
 import torch
@@ -8,9 +9,7 @@ import torchvision
 import torch.utils.benchmark as benchmark
 import torchvision.transforms as transforms 
 
-def run_net(model, optimizer, criterion, dataloader, device):
-
-    epochs = 10
+def run_net(model, epochs, optimizer, criterion, dataloader, device):
     
     for e in range(epochs):
 
@@ -28,44 +27,22 @@ def run_net(model, optimizer, criterion, dataloader, device):
         print(f"Epoch {e} finished") 
             
         
+@click.command()
+@click.option('--data_root', default="./image_net/")
+@click.option('--batch_size', default=64)
+@click.option('--num_epochs', default=1)
+@click.option('--num_repeats', default=1)
+def main(data_root, batch_size, num_epochs, num_repeats):
 
-def main():
-
-    num_warmups = 1
-    num_repeats = 1
-    input_shape = (1, 3, 224, 224)
 
     device = torch.device("cuda")
 
+    print("Create network ... ", end="", flush=True)
     model = torchvision.models.resnet50(pretrained=False)
-    # class Net(nn.Module):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.conv1 = nn.Conv2d(3, 6, 5)
-    #         self.pool = nn.MaxPool2d(2, 2)
-    #         self.conv2 = nn.Conv2d(6, 16, 5)
-    #         self.fc1 = nn.Linear(16 * 5 * 5, 120)
-    #         self.fc2 = nn.Linear(120, 84)
-    #         self.fc3 = nn.Linear(84, 10)
-
-    #     def forward(self, x):
-    #         x = self.pool(F.relu(self.conv1(x)))
-    #         x = self.pool(F.relu(self.conv2(x)))
-    #         x = torch.flatten(x, 1) # flatten all dimensions except batch
-    #         x = F.relu(self.fc1(x))
-    #         x = F.relu(self.fc2(x))
-    #         x = self.fc3(x)
-    #         return x
-        
-    # model = Net()
-
-
-#model = nn.Conv2d(in_channels=input_shape[1],
-    #                  out_channels=256,
-    #                  kernel_size=(5, 5))
+    print("ok", flush=True)
 
     model.to(device)
-#    model.eval()
+    #    model.eval()
 
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
     loss = nn.CrossEntropyLoss()
@@ -79,18 +56,21 @@ def main():
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
     is_valid = lambda x: True if x.endswith(".JPEG") else False
-    dataset = torchvision.datasets.ImageFolder("/opt/data/image_net/raw-data/train/", transform=transform, is_valid_file=is_valid)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=64,
+    print("Prepare dataset ... ", end="", flush=True)
+    dataset = torchvision.datasets.ImageFolder(data_root, transform=transform, is_valid_file=is_valid)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                              shuffle=True)
-
+    print("ok", flush=True)
         
 
-    print("Latency Measurement (Using PyTorch Benchmark) ... ", flush=True, end="")
+    print("Latency Measurement (Using PyTorch Benchmark)", flush=True)
+    print(" ... ", flush=True)
     num_threads = 1
-    timer = benchmark.Timer(stmt="run_net(model, optimizer, loss, dataloader, device)",
+    timer = benchmark.Timer(stmt="run_net(model, epochs, optimizer, loss, dataloader, device)",
                             setup="from __main__ import run_net",
                             globals={
                                 "model": model,
+                                "epochs": num_epochs,
                                 "optimizer": optimizer,
                                 "loss": loss,
                                 "dataloader": dataloader,
