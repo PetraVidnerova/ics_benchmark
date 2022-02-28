@@ -1,35 +1,70 @@
+import logging
+import click
+
 import torch
+import torchvision
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import torch.nn as nn
 import torch.optim as optim
 from torch.nn.parallel import DistributedDataParallel
+import torchvision.transforms as transforms 
+from torch.utils.data.distributed import DistributedSampler
+from torch.utils.data import DataLoader
 
 
-def test(rank, world_size):
+def test(rank, world_size, data_root, batch_size, epochs):
     dist.init_process_group("gloo", rank=rank, world_size=world_size)
 
-    model = nn.Linear(10, 10).to(rank)
-    ddp_model = DistributedDataParallel(model, device_ids=[rank])
+    logging.info("Create network ... ")
+    model = torchvision.models.resnet50(pretrained=False).to(rank)
+    logging.info("ok")
+    
+    model = DistributedDataParallel(model, device_ids=[rank])
 
     # define loss function and optimizer
-    loss_fn = nn.MSELoss()
-    optimizer = optim.SGD(ddp_model.parameters(), lr=0.001)
+    optimizer = optim.SGD(model.parameters(), lr=0.0001)
+    criterion = nn.CrossEntropyLoss()
 
-    # forward pass
-    outputs = ddp_model(torch.randn(20, 10).to(rank))
-    labels = torch.randn(20, 10).to(rank)
-    # backward pass
-    loss_fn(outputs, labels).backward()
-    # update parameters
-    optimizer.step()
+    # data set
+    transform = transforms.Compose([
+        transforms.Resize(size=(224,224)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+    is_valid = lambda x: True if x.endswith(".JPEG") else False
+    logging.info("Prepare dataset ... ")
+    dataset = torchvision.datasets.ImageFolder(data_root, transform=transform, is_valid_file=is_valid)
+    logging.info("ok")
+
+    sampler = DistributedSampler(dataset, shuffle=True, seed=42)
+    dataloader = DataLoader(dataset, batch_size=batch_size,
+                            shuffle=False, sampler=sampler)
+    
+
+    for e in range(epochs):
+        sampler.set_epoch(e)
+        for i, data in enumerate(dataloader):
+            inputs, labels = data[0].to(rank), data[1].to(rank)
+            optimizer.zero_grad()
+            
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            if i > 10:
+                break
 
 
-def main():
+@click.command()
+@click.option("--data_root", default="/home/vidnerova/image_net/raw-data/train")
+@click.option("--batch_size", default=64)
+def main(data_root, batch_size):
     world_size = 2
+    epochs = 1
     mp.spawn(
         test,
-        args=(world_size,),
+        args=(world_size, data_root, batch_size, epochs),
         nprocs=world_size,
         join=True
     )
