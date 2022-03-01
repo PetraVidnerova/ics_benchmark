@@ -12,6 +12,9 @@ conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
 conda install click tqdm
 ```
 
+# Data 
+From the prerious benchmark! 
+
 # Run
 
 One GPU variant: 
