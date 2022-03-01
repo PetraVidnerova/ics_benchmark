@@ -13,7 +13,12 @@ conda install click tqdm
 ```
 
 # Data 
-From the prerious benchmark! 
+```sh
+  wget -c https://filr.cs.cas.cz:443/ssf/s/readFile/share/226/-7042450145272094661/publicLink/data.tgz
+  md5sum data.tgz
+    6b4d948b0402caa2b61af5270138b357  data.tgz
+  tar xvfz data.tgz 
+```
 
 # Run
 
