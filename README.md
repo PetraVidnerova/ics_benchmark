@@ -12,7 +12,8 @@ conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
 conda install click tqdm
 ```
 
-# Data 
+# Data
+TODO FIX ME
 ```
 wget -c https://filr.cs.cas.cz:443/ssf/s/readFile/share/226/-7042450145272094661/publicLink/data.tgz
 md5sum data.tgz
