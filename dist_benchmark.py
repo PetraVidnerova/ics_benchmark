@@ -1,7 +1,7 @@
 import os
-import logging
 import click
 
+from tqdm import tqdm 
 import torch
 import torchvision
 import torch.distributed as dist
@@ -27,6 +27,9 @@ def cleanup():
 def real_work(rank, world_size, model, dataloader, sampler, optimizer, criterion, epochs):
     for e in range(epochs):
         sampler.set_epoch(e)
+        total = len(dataloader)
+        if rank == 0:
+            pbar = tqdm(total=len(dataloader))
         for i, data in enumerate(dataloader):
             inputs, labels = data[0].to(rank), data[1].to(rank)
             optimizer.zero_grad()
@@ -35,9 +38,11 @@ def real_work(rank, world_size, model, dataloader, sampler, optimizer, criterion
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
-            if i > 10:
-                break
-
+            if rank == 0:
+                pbar.update()
+        if rank == 0:
+            pbar.close()
+                
         dist.barrier()
         if rank == 0:
             losses = [None for _ in range(world_size)]
@@ -54,9 +59,9 @@ def real_work(rank, world_size, model, dataloader, sampler, optimizer, criterion
 def test(rank, world_size, data_root, batch_size, epochs):
     setup(rank, world_size)
     
-    logging.info("Create network ... ")
+    print("Create network ... ", end="", flush=True)
     model = torchvision.models.resnet50(pretrained=False).to(rank)
-    logging.info("ok")
+    print("ok", flush=True)
     
     model = DistributedDataParallel(model, device_ids=[rank])
 
@@ -71,9 +76,9 @@ def test(rank, world_size, data_root, batch_size, epochs):
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
     is_valid = lambda x: True if x.endswith(".JPEG") else False
-    logging.info("Prepare dataset ... ")
+    print("Prepare dataset ... ", end="", flush=True)
     dataset = torchvision.datasets.ImageFolder(data_root, transform=transform, is_valid_file=is_valid)
-    logging.info("ok")
+    print("ok")
 
     sampler = DistributedSampler(dataset, shuffle=True, seed=42)
     dataloader = DataLoader(dataset, batch_size=batch_size,
@@ -120,10 +125,8 @@ def test(rank, world_size, data_root, batch_size, epochs):
 @click.option("--data_root", default="/home/vidnerova/image_net/raw-data/train")
 @click.option("--batch_size", default=64)
 def main(data_root, batch_size):
-    logging.basicConfig(level=logging.INFO)
-
     world_size = 2
-    epochs = 10
+    epochs = 1
     mp.spawn(
         test,
         args=(world_size, data_root, batch_size, epochs),
