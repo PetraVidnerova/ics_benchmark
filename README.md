@@ -1,7 +1,5 @@
 # ics_benchmark
 
-TODO: 2GPU variant 
-
 
 # Setup 
 
@@ -16,6 +14,12 @@ conda install click tqdm
 
 # Run
 
+One GPU variant: 
 ```
 python benchmark.py --data_root <PATH_TO_DATA> 
+```
+
+Two GPUs variant:
+```
+python dist_benchmark.py --data_root <PATH_TO_DATA>
 ```
