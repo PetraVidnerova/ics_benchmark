@@ -1,5 +1,6 @@
 import os
 import click
+import socket
 
 from tqdm import tqdm 
 import torch
@@ -14,10 +15,17 @@ import torchvision.transforms as transforms
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 
+def get_free_port():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(("", 0)) # 0 -> OS finds an availalbe port 
+    port = sock.getsockname()[1]
+    sock.close()
+    return port
+
 
 def setup(rank, world_size):
     os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '23456'
+    os.environ['MASTER_PORT'] = '23456' #str(get_free_port())
     dist.init_process_group("gloo", rank=rank, world_size=world_size)
 
 def cleanup():
@@ -29,8 +37,10 @@ def real_work(rank, world_size, model, dataloader, sampler, optimizer, criterion
         sampler.set_epoch(e)
         total = len(dataloader)
         if rank == 0:
-            pbar = tqdm(total=len(dataloader))
+            pbar = tqdm(total=500)
         for i, data in enumerate(dataloader):
+            if i>500:
+                break
             inputs, labels = data[0].to(rank), data[1].to(rank)
             optimizer.zero_grad()
             
@@ -116,7 +126,7 @@ def test(rank, world_size, data_root, batch_size, epochs):
         dist.gather_object(profile_result.mean, None)
 
     if rank == 0:
-        print("Benchmark result:", results) 
+        print("Benchmark result:", *results) 
         
     cleanup()
 
