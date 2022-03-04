@@ -27,3 +27,6 @@ Two GPUs variant:
 ```
 python dist_benchmark.py --data_root <PATH_TO_DATA>
 ```
+
+# Preliminary
+single 5 000 batches - 3050.60989 s on GeForce GTX 1080 Ti 
