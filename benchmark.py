@@ -10,11 +10,15 @@ import torch.utils.benchmark as benchmark
 import torchvision.transforms as transforms 
 
 def run_net(model, epochs, optimizer, criterion, dataloader, device):
+
+    NUM_BATCHES = 5000
     
     for e in range(epochs):
 
-        with tqdm(total=len(dataloader)) as t:
+        with tqdm(total=NUM_BATCHES) as t:
             for i, data in enumerate(dataloader):
+                if i > NUM_BATCHES:
+                    break
                 inputs, labels = data[0].to(device), data[1].to(device)
                 optimizer.zero_grad()
 
