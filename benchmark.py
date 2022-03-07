@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 
 def run_net(model, epochs, optimizer, criterion, dataloader, device):
 
-    NUM_BATCHES = 100
+    NUM_BATCHES = 5000
     
     for e in range(epochs):
 
