@@ -28,6 +28,13 @@ Two GPUs variant:
 python dist_benchmark.py --data_root <PATH_TO_DATA>
 ```
 
+# Dataloader with num_workers 8 
+## One gpu
+h: single 5 000 batches - 1776.43590 s
+
+a: single 5 000 batches - 1187.34603 s
+
+
 # Preliminary
 ### Benchmark timer 
 h: single 5 000 batches - 3050.60989 s 
