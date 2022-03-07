@@ -132,7 +132,7 @@ def test(rank, world_size, data_root, batch_size, epochs):
 
 
 @click.command()
-@click.option("--data_root", default="/home/vidnerova/image_net/raw-data/train")
+@click.option("--data_root", default="./data/train")
 @click.option("--batch_size", default=64)
 def main(data_root, batch_size):
     world_size = 2
