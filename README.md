@@ -30,4 +30,11 @@ python dist_benchmark.py --data_root <PATH_TO_DATA>
 
 # Preliminary
 h: single 5 000 batches - 3050.60989 s 
+
 a: single 5 000 batches - 5870.85253 s
+
+### Cuda timer: (only computation)
+h: single 100 batches  - 33.95820 s
+
+a:  single 100 batches -  22.69897 s
+
