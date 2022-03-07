@@ -28,11 +28,16 @@ Two GPUs variant:
 python dist_benchmark.py --data_root <PATH_TO_DATA>
 ```
 
-# Dataloader with num_workers 8 
+# Results 
 ## One gpu
 h: single 5 000 batches - 1776.43590 s
 
 a: single 5 000 batches - 1187.34603 s
+
+## Two gpus 
+h: 2 000 batches - 816.6016886209836 816.600624855957
+
+a: 2 000 batches - 551.1997719686478 551.1959542506374
 
 
 # Preliminary
