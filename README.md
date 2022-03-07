@@ -38,3 +38,7 @@ h: single 100 batches  - 33.95820 s
 
 a:  single 100 batches -  22.69897 s
 
+### Double (benchmark timer)
+h: double 2000 batches - 1927.094201934 1927.109693536011
+
+a: double 2000 batches - 
