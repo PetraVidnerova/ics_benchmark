@@ -36,15 +36,23 @@ def run_net(model, epochs, optimizer, criterion, dataloader, device):
 @click.option('--batch_size', default=64)
 @click.option('--num_epochs', default=1)
 @click.option('--num_repeats', default=1)
-def main(data_root, batch_size, num_epochs, num_repeats):
+@click.option('--single_gpu/--double_gpu', default=True, is_flag=True)
+def main(data_root, batch_size, num_epochs, num_repeats, single_gpu):
 
-
+    if single_gpu:
+        print("Running on *ONE* GPU.")
+    else:
+        print("Running on *TWO* GPUs.")
+        
     device = torch.device("cuda")
 
     print("Create network ... ", end="", flush=True)
     model = torchvision.models.resnet50(pretrained=False)
     print("ok", flush=True)
 
+    if not single_gpu:
+        model = nn.DataParallel(model, device_ids=[0,1])
+    
     model.to(device)
     #    model.eval()
 
