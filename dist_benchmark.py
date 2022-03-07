@@ -37,9 +37,9 @@ def real_work(rank, world_size, model, dataloader, sampler, optimizer, criterion
         sampler.set_epoch(e)
         total = len(dataloader)
         if rank == 0:
-            pbar = tqdm(total=5000)
+            pbar = tqdm(total=2000)
         for i, data in enumerate(dataloader):
-            if i>5000:
+            if i>2000:
                 break
             inputs, labels = data[0].to(rank), data[1].to(rank)
             optimizer.zero_grad()

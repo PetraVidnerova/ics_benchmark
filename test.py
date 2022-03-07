@@ -13,18 +13,33 @@ def run_net(model, epochs, optimizer, criterion, dataloader, device):
 
     NUM_BATCHES = 100
     elapsed_time_ms = 0
+    data_loading_time = 0
+    to_device_time = 0 
     
     for e in range(epochs):
 
+        data_iter = iter(dataloader)
         with tqdm(total=NUM_BATCHES) as t:
-            for i, data in enumerate(dataloader):
-                if i > NUM_BATCHES:
-                    break
-                inputs, labels = data[0].to(device), data[1].to(device)
-                optimizer.zero_grad()
+            for i in range(NUM_BATCHES):
+                data_start_event = torch.cuda.Event(enable_timing=True)
+                data_end_event = torch.cuda.Event(enable_timing=True)
+                data_start_event.record()
+                data = data_iter.next()
+                data_end_event.record()
+                torch.cuda.synchronize() 
+                data_loading_time += data_start_event.elapsed_time(data_end_event)
 
+                device_start_event = torch.cuda.Event(enable_timing=True)
+                device_end_event = torch.cuda.Event(enable_timing=True)
+                device_start_event.record()
+                inputs, labels = data[0].to(device), data[1].to(device)
+                device_end_event.record()
+                torch.cuda.synchronize()
+                to_device_time += device_start_event.elapsed_time(device_end_event)
+                
                 start_event = torch.cuda.Event(enable_timing=True)
                 end_event = torch.cuda.Event(enable_timing=True)
+                optimizer.zero_grad()
                 start_event.record()
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
@@ -37,7 +52,7 @@ def run_net(model, epochs, optimizer, criterion, dataloader, device):
                 t.update()
             
         print(f"Epoch {e} finished") 
-    return elapsed_time_ms 
+    return elapsed_time_ms, data_loading_time, to_device_time
         
 @click.command()
 @click.option('--data_root', default="./data/train/")
@@ -95,9 +110,9 @@ def main(data_root, batch_size, num_epochs, num_repeats):
     # profile_result = timer.timeit(num_repeats)
     for _ in range(2):
         run_net(model, num_epochs, optimizer, loss, dataloader, device)
-    result = run_net(model, num_epochs, optimizer, loss, dataloader, device)
+    result, data, device = run_net(model, num_epochs, optimizer, loss, dataloader, device)
     #    print(f"Latency: {profile_result.mean :.5f} s")
-    print(f"Latency: {result/1000:.5f} s")
+    print(f"Latency: {result/1000:.5f} {data/1000:.5f} {device/1000:.5f}s")
 
 if __name__ == "__main__":
 
