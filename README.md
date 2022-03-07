@@ -40,7 +40,7 @@ h: single 5 000 batches - 1776.43590 s
 a: single 5 000 batches - 1187.34603 s
 
 ## Two GPUs
-h: 5 000 batches - 
+h: 5 000 batches - 1026.61801 s
 
 a: 5000 batches - 749.79053 s
 
