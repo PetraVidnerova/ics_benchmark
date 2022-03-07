@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 
 def run_net(model, epochs, optimizer, criterion, dataloader, device):
 
-    NUM_BATCHES = 5000
+    NUM_BATCHES = 100
     
     for e in range(epochs):
 
@@ -62,7 +62,7 @@ def main(data_root, batch_size, num_epochs, num_repeats):
     is_valid = lambda x: True if x.endswith(".JPEG") else False
     print("Prepare dataset ... ", end="", flush=True)
     dataset = torchvision.datasets.ImageFolder(data_root, transform=transform, is_valid_file=is_valid)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=8,
                                              shuffle=True)
     print("ok", flush=True)
         
