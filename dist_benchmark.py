@@ -91,7 +91,7 @@ def test(rank, world_size, data_root, batch_size, epochs):
     print("ok")
 
     sampler = DistributedSampler(dataset, shuffle=True, seed=42)
-    dataloader = DataLoader(dataset, batch_size=batch_size,
+    dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=4, 
                             shuffle=False, sampler=sampler)
 
 
