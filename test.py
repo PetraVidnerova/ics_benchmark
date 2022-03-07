@@ -27,14 +27,13 @@ def run_net(model, epochs, optimizer, criterion, dataloader, device):
                 end_event = torch.cuda.Event(enable_timing=True)
                 start_event.record()
                 outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                loss.backward()
+                optimizer.step()
                 end_event.record()
                 torch.cuda.synchronize()
                 elapsed_time_ms += start_event.elapsed_time(end_event)
 
-
-                loss = criterion(outputs, labels)
-                loss.backward()
-                optimizer.step()
                 t.update()
             
         print(f"Epoch {e} finished") 
