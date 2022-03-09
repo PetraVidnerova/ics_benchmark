@@ -9,13 +9,15 @@ import torchvision
 import torch.utils.benchmark as benchmark
 import torchvision.transforms as transforms 
 
+from dataset import BenchmarkDataset
+
 def run_net(model, epochs, optimizer, criterion, dataloader, device):
 
     NUM_BATCHES = 5000
     
     for e in range(epochs):
 
-        with tqdm(total=NUM_BATCHES) as t:
+        with tqdm(total=len(dataloader)) as t:
             for i, data in enumerate(dataloader):
                 if i > NUM_BATCHES:
                     break
@@ -37,7 +39,8 @@ def run_net(model, epochs, optimizer, criterion, dataloader, device):
 @click.option('--num_epochs', default=1)
 @click.option('--num_repeats', default=1)
 @click.option('--single_gpu/--double_gpu', default=True, is_flag=True)
-def main(data_root, batch_size, num_epochs, num_repeats, single_gpu):
+@click.option('--use_tfrecord', default=False, is_flag=True)
+def main(data_root, batch_size, num_epochs, num_repeats, single_gpu, use_tfrecord):
 
     if single_gpu:
         print("Running on *ONE* GPU.")
@@ -59,19 +62,31 @@ def main(data_root, batch_size, num_epochs, num_repeats, single_gpu):
     optimizer = optim.SGD(model.parameters(), lr=0.0001)
     loss = nn.CrossEntropyLoss()
     
-    
-    # Data set
-    transform = transforms.Compose(
-        [
-            transforms.Resize(size=(224,224)),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    if use_tfrecord:
 
-    is_valid = lambda x: True if x.endswith(".JPEG") else False
-    print("Prepare dataset ... ", end="", flush=True)
-    dataset = torchvision.datasets.ImageFolder(data_root, transform=transform, is_valid_file=is_valid)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=8,
-                                             shuffle=True)
+        # record_patern = data_root + "/train-{}-of-01024"
+        # description = {"image/encoded": "byte", "image/class/label": "int"}
+        # splits = {
+        #     str(x).zfill(5): 1.0
+        #     for x in range(1024)
+        # }
+        dataset = BenchmarkDataset(data_root)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    else:
+        # Data set
+        transform = transforms.Compose(
+            [
+                transforms.Resize(size=(224,224)),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            ]
+        )
+
+        is_valid = lambda x: True if x.endswith(".JPEG") else False
+        print("Prepare dataset ... ", end="", flush=True)
+        dataset = torchvision.datasets.ImageFolder(data_root, transform=transform, is_valid_file=is_valid)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=4,
+                                                 shuffle=True)
     print("ok", flush=True)
         
 
