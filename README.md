@@ -25,16 +25,26 @@ python benchmark.py --data_root <PATH_TO_DATA>
 
 Two GPUs variant:
 ```
+python benchmark.py --data_root <PATH_TO_DATA> --double_gpu 
+```
+
+Two GPUs distributed variant:
+```
 python dist_benchmark.py --data_root <PATH_TO_DATA>
 ```
 
 # Results 
-## One gpu
+## One GPU
 h: single 5 000 batches - 1776.43590 s
 
 a: single 5 000 batches - 1187.34603 s
 
-## Two gpus 
+## Two GPUs
+h: 5 000 batches - 1026.61801 s
+
+a: 5000 batches - 749.79053 s
+
+## Two GPUs - distributed 
 h: 2 000 batches - 816.6016886209836 816.600624855957
 
 a: 2 000 batches - 551.1997719686478 551.1959542506374
