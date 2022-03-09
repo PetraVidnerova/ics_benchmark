@@ -17,7 +17,7 @@ def run_net(model, epochs, optimizer, criterion, dataloader, device):
     
     for e in range(epochs):
 
-        with tqdm(total=len(dataloader)) as t:
+        with tqdm(total=NUM_BATCHES) as t:
             for i, data in enumerate(dataloader):
                 if i > NUM_BATCHES:
                     break
@@ -85,7 +85,7 @@ def main(data_root, batch_size, num_epochs, num_repeats, single_gpu, use_tfrecor
         is_valid = lambda x: True if x.endswith(".JPEG") else False
         print("Prepare dataset ... ", end="", flush=True)
         dataset = torchvision.datasets.ImageFolder(data_root, transform=transform, is_valid_file=is_valid)
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=4,
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=8,
                                                  shuffle=True)
     print("ok", flush=True)
         
